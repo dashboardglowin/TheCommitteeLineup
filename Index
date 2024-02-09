@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Baseball Lineup</title>
+  <style>
+    /* Add your CSS styles here if needed */
+
+    /* New style for player buttons */
+    .player-button {
+      width: 80px; /* Adjust the width as needed */
+      height: 40px; /* Adjust the height as needed */
+      margin: 10px;  /* Adjust the margin as needed */
+    }
+
+    /* New style for filled positions */
+    .filled-position {
+      background-color: lightblue; /* Adjust the color as needed */
+    }
+
+    /* Updated style for position list */
+    #positionList {
+      border: 1px solid #ccc;
+      padding: 5px; /* Adjust the padding as needed */
+      margin-top: 25px; /* Adjust the margin as needed */
+      margin-bottom: 25px; /* Adjust the margin as needed */
+      font-size: 20px; /* Adjust the font size as needed */
+      list-style: none; /* Remove bullet points */
+      max-width: 500px; /* Retain the maximum width as needed */
+      padding-left: 3px; /* Adjust the left padding for position names */
+    }
+
+    /* Updated style for popup container */
+    #popupContainer {
+      position: absolute;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      padding: 10px; /* Adjust the padding as needed */
+      z-index: 1;
+    }
+
+    /* Updated style for the title */
+    h2 {
+      margin-top: 30px; /* Adjust the margin as needed */
+    }
+
+    /* Updated style for the Defensive Lineup Card */
+    #lineupCard {
+      display: inline-block; /* Display lineup card and diamond container inline */
+      border: 1px solid #ccc;
+      padding: 10px; /* Adjust the padding as needed */
+      max-width: 200px; /* Adjust the maximum width as needed */
+    }
+
+/* Updated style for the baseball diamond container */
+#diamondContainer {
+  font-family: 'Arial', sans-serif; /* Use Arial font or fallback to sans-serif if Arial is not available */
+  font-size: 16px; /* Adjust the font size as needed */
+  font-weight: bold; /* Make the text bold */
+  color: #FFFFFF; /* Set the font color to black */
+  text-shadow: 1px 1px 2px #333; /* Add a subtle shadow for better visibility */
+  white-space: pre;
+  margin-top: 20px;
+  position: relative;
+  border: 2px solid #ccc; /* Add border for better visibility */
+  background-image: url('https://i.imgur.com/GSTnodZ.png'); /* Replace 'YourImageFilename.jpg' with the actual filename from the URL */
+  background-size: contain; /* Scale the background image to fit the container while maintaining its aspect ratio */
+  background-repeat: no-repeat; /* Prevent the background image from repeating */
+  padding: 10px; /* Add padding for better appearance */
+  max-width: 480px; /* Retain the maximum width as needed */
+  height: 70vh; /* Retain the specified height */
+}
+
+    /* New style for player names on the baseball diamond */
+    .player-name {
+      position: absolute;
+      color: #333; /* Adjust the color as needed */
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    // Define player names and positions
+    var playerNames = ["Matthew", "Benjamin", "Jacob", "Andrew", "Luke", "Lucas R", "Tyler", "Lucas H", "Ryan", "David", "Vincent"];
+    var positions = ["Pitcher", "Catcher", "1st Base", "2nd Base", "3rd Base", "Shortstop", "Left Field", "Center Field", "Right Field", "Bench 1", "Bench 2"];
+
+    // Array to track filled positions
+    var filledPositions = [];
+
+    // Array to track used player buttons
+    var usedPlayerButtons = [];
+
+    // Array to store selected players for baseball diamond display
+    var selectedPlayers = [];
+
+    // Function to create buttons and position list
+    function createLineup() {
+      // Create buttons for each player
+      for (var i = 0; i < playerNames.length; i++) {
+        createPlayerButton(playerNames[i]);
+      }
+
+      // Create position list
+      createPositionList();
+
+      // Create diamond container
+      createDiamondContainer();
+    }
+
+    // Function to create a player button
+    function createPlayerButton(playerName) {
+      var button = document.createElement("button");
+      button.innerHTML = playerName;
+      button.classList.add("player-button");
+      button.onclick = function () {
+        showPositionPopup(playerName, button);
+      };
+      document.body.appendChild(button);
+    }
+
+    // Function to create the position list
+    function createPositionList() {
+      // Create a title for the Defensive Lineup Card
+      var title = document.createElement("h2");
+      title.innerHTML = "Defensive Lineup Card";
+      document.body.appendChild(title);
+
+      var list = document.createElement("ul");
+      list.id = "positionList";
+      document.body.appendChild(list);
+
+      // Populate the initial position list
+      for (var i = 0; i < positions.length; i++) {
+        var listItem = document.createElement("li");
+        listItem.innerHTML = positions[i] + ": ";
+        list.appendChild(listItem);
+      }
+    }
+
+// Function to create the diamond container
+function createDiamondContainer() {
+  var diamondContainer = document.createElement("div");
+  diamondContainer.id = "diamondContainer";
+
+  // Adjust the height of the container as needed (in pixels)
+  diamondContainer.style.height = "400px"; // Change this value to your desired height
+      document.body.appendChild(diamondContainer);
+    }
+
+    // Function to show the position assignment popup
+    function showPositionPopup(playerName, playerButton) {
+      // Close any existing popups
+      closePositionPopups();
+
+      // Check if the player button has been used
+      if (usedPlayerButtons.includes(playerButton)) {
+        return;
+      }
+
+      // Create a container for the popup choices
+      var popupContainer = document.createElement("div");
+      popupContainer.id = "popupContainer";
+
+      for (var i = 0; i < positions.length; i++) {
+        var positionButton = document.createElement("button");
+        positionButton.innerHTML = positions[i];
+        positionButton.onclick = function () {
+          assignPosition(playerName, this.innerHTML, playerButton);
+          document.body.removeChild(popupContainer);
+        };
+
+        // Check if position is filled and disable button
+        if (filledPositions.includes(positions[i])) {
+          positionButton.classList.add("filled-position");
+          positionButton.disabled = true;
+        }
+
+        popupContainer.appendChild(positionButton);
+      }
+
+      // Position the popup container between the player boxes and the lineup card
+      var playerButtonRect = playerButton.getBoundingClientRect();
+      popupContainer.style.left = playerButtonRect.left + "px";
+      popupContainer.style.top = playerButtonRect.bottom + 20 + "px"; /* Add space between player buttons and lineup card */
+
+      document.body.appendChild(popupContainer);
+
+      // Mark the player button as used
+      usedPlayerButtons.push(playerButton);
+    }
+
+    // Function to close all position assignment popups
+    function closePositionPopups() {
+      var popups = document.querySelectorAll("div[id^='popupContainer']");
+      popups.forEach(function (popup) {
+        document.body.removeChild(popup);
+      });
+
+      // Clear the used player buttons array
+      usedPlayerButtons = [];
+    }
+
+    // Function to assign a position to a player
+    function assignPosition(playerName, position, playerButton) {
+      var positionList = document.getElementById("positionList");
+      var positionItems = positionList.getElementsByTagName("li");
+
+      for (var i = 0; i < positionItems.length; i++) {
+        if (positionItems[i].innerHTML.includes(position)) {
+          positionItems[i].innerHTML = positions[i] + ": " + playerName + " ";
+
+          // Add filled position to the array
+          filledPositions.push(positions[i]);
+
+          // Add selected player to the array
+          selectedPlayers.push({ playerName: playerName, position: position });
+        }
+      }
+
+      // Change style of the player button
+      playerButton.classList.add("filled-position");
+      playerButton.disabled = true;
+
+      // Display selected players on the baseball diamond
+      displaySelectedPlayers();
+    }
+
+    // Function to display selected players on the baseball diamond within the diamondContainer
+    function displaySelectedPlayers() {
+      // Clear existing player names in diamondContainer
+      var diamondContainer = document.getElementById("diamondContainer");
+      diamondContainer.innerHTML = "";
+
+      // Add player names to the baseball diamond within diamondContainer
+      selectedPlayers.forEach(function (player) {
+        var playerElement = document.createElement("div");
+        playerElement.innerHTML = player.playerName;
+        playerElement.classList.add("player-name");
+
+        // Calculate position percentages based on diamondContainer dimensions
+        var containerWidth = diamondContainer.offsetWidth;
+        var containerHeight = diamondContainer.offsetHeight;
+
+        switch (player.position) {
+          case "Pitcher":
+            playerElement.style.left = containerWidth * 0.44 + "px";
+            playerElement.style.top = containerHeight * 0.55 + "px";
+            break;
+          case "Catcher":
+            playerElement.style.left = containerWidth * 0.44 + "px";
+            playerElement.style.top = containerHeight * 0.8 + "px";
+            break;
+          case "1st Base":
+            playerElement.style.left = containerWidth * 0.62 + "px";
+            playerElement.style.top = containerHeight * 0.55 + "px";
+            break;
+          case "2nd Base":
+            playerElement.style.left = containerWidth * 0.56 + "px";
+            playerElement.style.top = containerHeight * 0.4 + "px";
+            break;
+          case "3rd Base":
+            playerElement.style.left = containerWidth * 0.27 + "px";
+            playerElement.style.top = containerHeight * 0.55 + "px";
+            break;
+          case "Shortstop":
+            playerElement.style.left = containerWidth * 0.34 + "px";
+            playerElement.style.top = containerHeight * 0.4 + "px";
+            playerElement.style.textAlign = "center";
+            break;
+          case "Left Field":
+            playerElement.style.left = containerWidth * 0.25 + "px";
+            playerElement.style.top = containerHeight * 0.25 + "px";
+            playerElement.style.textAlign = "center";
+            break;
+          case "Center Field":
+            playerElement.style.left = containerWidth * 0.44 + "px";
+            playerElement.style.top = containerHeight * 0.17 + "px";
+            break;
+          case "Right Field":
+            playerElement.style.left = containerWidth * 0.65 + "px";
+            playerElement.style.top = containerHeight * 0.25 + "px";
+            break;
+          case "Bench 1":
+            playerElement.style.left = containerWidth * 0.7 + "px";
+            playerElement.style.top = containerHeight * 0.7 + "px";
+            break;
+          case "Bench 2":
+            playerElement.style.left = containerWidth * 0.7 + "px";
+            playerElement.style.top = containerHeight * 0.75 + "px";
+            break;
+          default:
+            break;
+        }
+
+        diamondContainer.appendChild(playerElement);
+      });
+    }
+
+    // Function to reset the lineup
+    function resetLineup() {
+      var positionList = document.getElementById("positionList");
+      positionList.innerHTML = "";
+
+      // Clear arrays
+      filledPositions = [];
+      usedPlayerButtons = [];
+      selectedPlayers = [];
+
+      createPositionList();
+      displaySelectedPlayers();
+    }
+
+    // Create the lineup when the page loads
+    window.onload = createLineup;
+  </script>
+</body>
+
+</html>
